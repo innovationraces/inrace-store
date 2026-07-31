@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حسابي — Inrace Store</title>
+<meta name="description" content="بيانات حسابك في Inrace Store — عدّل بياناتك أو غيّري كلمة السر.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .account-wrap{max-width:520px;margin:0 auto;padding:56px 20px 90px}
+  .account-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px}
+  .account-field{margin-bottom:16px}
+  .account-field label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px}
+  .account-field input{
+    width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);
+    font-family:'Tajawal',sans-serif;font-size:14px;outline:none;
+  }
+  .account-field input:focus{border-color:var(--orange)}
+  .account-field input:disabled{background:var(--bg);color:var(--text-muted);cursor:not-allowed}
+  .account-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .account-divider{border-top:1px solid var(--border);margin:26px 0;padding-top:22px}
+  .account-hint{font-size:12px;color:var(--text-muted);margin-top:-8px;margin-bottom:16px}
+  .account-status{margin-top:14px;font-size:13.5px;display:none}
+  .account-status.success{color:var(--teal)}
+  .account-status.error{color:#d94848}
+  @media(max-width:520px){
+    .account-grid-2{grid-template-columns:1fr}
+    .account-wrap{padding:40px 16px 70px}
+    .account-card{padding:22px}
+  }
+</style>
+</head>
+<body>
+
+<script src="script.js"></script>
+<script>
+  const session = getSession();
+  if(!session || session.role !== 'customer'){
+    window.location.href = 'inrace-login.html';
+  }
+</script>
+
+<section class="hero" style="padding:56px 0 0;text-align:center">
+  <div class="wrap">
+    <div class="eyebrow" style="margin:0 auto 14px"><span class="eyebrow-dot"></span> Inrace</div>
+    <h1 style="font-size:clamp(1.6rem,3vw,2rem)">حسابي</h1>
+    <p class="hero-sub" style="margin:0 auto 8px">عدّل بياناتك أو غيّري كلمة السر من هنا.</p>
+  </div>
+</section>
+
+<div class="account-wrap">
+  <div class="account-card">
+    <div class="account-field">
+      <label>الإيميل</label>
+      <input id="acc-email" type="email" disabled>
+    </div>
+
+    <div class="account-grid-2">
+      <div class="account-field">
+        <label>الاسم الكامل</label>
+        <input id="acc-fullname" type="text">
+      </div>
+      <div class="account-field">
+        <label>رقم التليفون</label>
+        <input id="acc-phone" type="text" style="direction:ltr;text-align:left">
+      </div>
+    </div>
+
+    <div class="account-field">
+      <label>رقم الواتساب</label>
+      <input id="acc-whatsapp" type="text" style="direction:ltr;text-align:left">
+    </div>
+
+    <div class="account-grid-2">
+      <div class="account-field">
+        <label>المدينة</label>
+        <input id="acc-city" type="text">
+      </div>
+      <div class="account-field">
+        <label>الدولة</label>
+        <input id="acc-country" type="text">
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveAccountInfo()">حفظ التغييرات</button>
+    <p id="acc-info-status" class="account-status"></p>
+
+    <div class="account-divider">
+      <div class="account-field">
+        <label>كلمة سر جديدة (اسيبها فاضية لو مش عايز تغيّريها)</label>
+        <input id="acc-new-password" type="password" placeholder="••••••••">
+      </div>
+      <p class="account-hint">8 حروف على الأقل، وتحتوي على حرف ورقم.</p>
+      <div class="account-field">
+        <label>تأكيد كلمة السر الجديدة</label>
+        <input id="acc-confirm-password" type="password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="changeAccountPassword()">تغيير كلمة السر</button>
+      <p id="acc-password-status" class="account-status"></p>
+    </div>
+
+    <div class="account-divider" style="text-align:center">
+      <button class="btn btn-ghost" onclick="logoutSession()">تسجيل الخروج ←</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function loadAccount(){
+    document.getElementById('acc-email').value = session.email;
+    try{
+      const res = await fetch(`${WORKER_API}/account?email=${encodeURIComponent(session.email)}`);
+      const data = await res.json();
+      if(!res.ok) return;
+      const acc = data.account || {};
+      document.getElementById('acc-fullname').value = acc.fullName || '';
+      document.getElementById('acc-phone').value = acc.phone || '';
+      document.getElementById('acc-whatsapp').value = acc.whatsapp || '';
+      document.getElementById('acc-city').value = acc.city || '';
+      document.getElementById('acc-country').value = acc.country || '';
+    }catch(e){
+      console.error('تعذّر تحميل بيانات الحساب', e);
+    }
+  }
+
+  function showStatus(elId, msg, isError){
+    const el = document.getElementById(elId);
+    el.textContent = msg;
+    el.className = 'account-status ' + (isError ? 'error' : 'success');
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+
+  async function saveAccountInfo(){
+    const body = {
+      email: session.email,
+      fullName: document.getElementById('acc-fullname').value.trim(),
+      phone: document.getElementById('acc-phone').value.trim(),
+      whatsapp: document.getElementById('acc-whatsapp').value.trim(),
+      city: document.getElementById('acc-city').value.trim(),
+      country: document.getElementById('acc-country').value.trim(),
+    };
+    try{
+      const res = await fetch(`${WORKER_API}/account/update`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if(!res.ok){
+        showStatus('acc-info-status', data.error || 'حصل خطأ في الحفظ.', true);
+        return;
+      }
+      showStatus('acc-info-status', 'تم الحفظ ✓', false);
+    }catch(e){
+      showStatus('acc-info-status', 'حصل خطأ في الاتصال بالسيرفر.', true);
+    }
+  }
+
+  async function changeAccountPassword(){
+    const newPassword = document.getElementById('acc-new-password').value;
+    const confirmPassword = document.getElementById('acc-confirm-password').value;
+    if(!newPassword){
+      showStatus('acc-password-status', 'اكتب كلمة السر الجديدة الأول.', true);
+      return;
+    }
+    if(newPassword !== confirmPassword){
+      showStatus('acc-password-status', 'كلمة السر وتأكيدها مش متطابقين.', true);
+      return;
+    }
+    try{
+      const res = await fetch(`${WORKER_API}/account/update`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          email: session.email,
+          fullName: document.getElementById('acc-fullname').value.trim(),
+          phone: document.getElementById('acc-phone').value.trim(),
+          whatsapp: document.getElementById('acc-whatsapp').value.trim(),
+          city: document.getElementById('acc-city').value.trim(),
+          country: document.getElementById('acc-country').value.trim(),
+          newPassword
+        })
+      });
+      const data = await res.json();
+      if(!res.ok){
+        showStatus('acc-password-status', data.error || 'حصل خطأ في تغيير كلمة السر.', true);
+        return;
+      }
+      document.getElementById('acc-new-password').value = '';
+      document.getElementById('acc-confirm-password').value = '';
+      showStatus('acc-password-status', 'اتغيّرت كلمة السر ✓', false);
+    }catch(e){
+      showStatus('acc-password-status', 'حصل خطأ في الاتصال بالسيرفر.', true);
+    }
+  }
+
+  loadAccount();
+</script>
+</body>
+</html>

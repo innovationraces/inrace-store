@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إتمام الدفع — Inrace Store</title>
+<meta name="description" content="أكمل عملية شراء منتجاتك الرقمية من Inrace بأمان عبر بوابة الدفع الموثوقة.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .checkout-header{padding:22px 0;border-bottom:1px solid var(--border)}
+  .checkout-header .wrap{display:flex;align-items:center;gap:10px}
+  .checkout-header b{font-size:1.1rem;color:var(--navy);font-weight:900}
+  .checkout-wrap{max-width:720px;margin:0 auto;padding:44px 20px 80px}
+  .checkout-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:22px}
+  .checkout-card h2{font-size:1.2rem;margin-bottom:6px}
+  .checkout-card .sub{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+  .co-item{
+    display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:16px 0;border-bottom:1px solid var(--border);
+  }
+  .co-item:last-child{border-bottom:none}
+  .co-item-info{flex:1;min-width:0}
+  .co-item-name{color:var(--navy);font-weight:700;font-size:14.5px}
+  .co-item-price{color:var(--text-muted);font-size:13px;margin-top:2px}
+  .co-item-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .co-pay-link{
+    background:var(--orange);color:#fff;padding:9px 18px;border-radius:100px;font-size:13px;font-weight:700;
+    text-decoration:none;white-space:nowrap;
+  }
+  .co-pay-link:hover{background:var(--orange-deep)}
+  .co-pay-disabled{
+    background:var(--bg);color:var(--text-muted);padding:9px 18px;border-radius:100px;font-size:12.5px;
+    white-space:nowrap;border:1px dashed var(--border);
+  }
+  .co-paid-btn{
+    background:none;border:1.5px solid var(--teal);color:var(--teal);padding:8px 14px;border-radius:100px;
+    font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;white-space:nowrap;
+  }
+  .co-paid-btn:hover{background:var(--teal-soft)}
+  .co-total{display:flex;justify-content:space-between;align-items:center;padding-top:16px;margin-top:6px;border-top:2px solid var(--border);font-weight:900;color:var(--navy);font-size:1.1rem}
+  .co-total span:last-child{color:var(--orange-deep)}
+  .co-empty{text-align:center;padding:40px 10px;color:var(--text-muted)}
+  .co-note{font-size:12px;color:var(--text-muted);line-height:1.8}
+</style>
+</head>
+<body>
+
+<header class="checkout-header">
+  <div class="wrap" style="justify-content:space-between">
+    <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+      <b>Inrace Store</b>
+    </a>
+    <select id="currency-select" class="currency-select" onchange="onCurrencyChange(this.value)" aria-label="العملة">
+      <option value="USD">USD $</option>
+      <option value="SAR">SAR ر.س</option>
+      <option value="AED">AED د.إ</option>
+      <option value="EGP">EGP ج.م</option>
+      <option value="KWD">KWD د.ك</option>
+      <option value="QAR">QAR ر.ق</option>
+      <option value="EUR">EUR €</option>
+      <option value="GBP">GBP £</option>
+    </select>
+  </div>
+</header>
+
+<div class="checkout-wrap">
+  <div class="checkout-card">
+    <h2>إتمام الدفع</h2>
+    <p class="sub">كل منتج بيتدفع على حدة من خلال بوابة الدفع الآمنة. دوس "ادفع الآن" جنب كل منتج.</p>
+    <div id="co-items"></div>
+    <div class="co-total" id="co-total-row" style="display:none">
+      <span>الإجمالي</span><span id="co-total-amount">$0</span>
+    </div>
+    <div class="co-empty" id="co-empty" style="display:none">
+      سلتك فاضية — <a href="inrace-products-page.html">تصفّحي المنتجات</a> الأول.
+    </div>
+  </div>
+
+  <div class="checkout-card" id="co-downloads-card" style="display:none">
+    <h2>ملفاتك جاهزة ⬇</h2>
+    <p class="sub">دوس على الرابط تحت عشان تنزّل الملف — الرابط ده بيشتغل مرة واحدة بس.</p>
+    <div id="co-downloads-list"></div>
+  </div>
+
+  <p class="co-note">
+    بعد ما تدفعي، هتتحولي لصفحة الدفع في تاب جديد. لما تخلّصي، ارجعي هنا ودوس "تم الدفع ✓"
+    جنب المنتج عشان نشيله من السلة ويظهرلك رابط تنزيل الملف (لو المنتج ده ليه ملف مرفوع).
+  </p>
+</div>
+
+<script src="script.js"></script>
+<script>
+  const completedDownloads = [];
+
+  function renderDownloadsList(){
+    const card = document.getElementById('co-downloads-card');
+    const listEl = document.getElementById('co-downloads-list');
+    if(!completedDownloads.length){
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = 'block';
+    listEl.innerHTML = completedDownloads.map(d => `
+      <div class="co-item">
+        <div class="co-item-info">
+          <div class="co-item-name">${d.name}</div>
+        </div>
+        <div class="co-item-actions">
+          <a href="${d.downloadUrl}" target="_blank" rel="noopener" class="co-pay-link">نزّل الملف ⬇</a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  const paymentProofs = {};
+
+  function handleProofUpload(index, input){
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e){
+      paymentProofs[index] = {base64: e.target.result, filename: file.name};
+      const btn = document.getElementById(`co-paid-btn-${index}`);
+      if(btn) btn.disabled = false;
+      const status = document.getElementById(`co-proof-status-${index}`);
+      if(status) status.textContent = '✓ الصورة اتضافت';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function renderCheckoutSummary(){
+    const cartData = loadCart();
+    const itemsEl = document.getElementById('co-items');
+    const totalRow = document.getElementById('co-total-row');
+    const emptyEl = document.getElementById('co-empty');
+
+    if(!cartData.length){
+      itemsEl.innerHTML = '';
+      totalRow.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    itemsEl.innerHTML = cartData.map((item, i) => {
+      const qty = item.quantity || 1;
+      const lineTotal = Number(item.price) * qty;
+      const payHTML = item.paymentLink
+        ? `<a href="${item.paymentLink}" target="_blank" rel="noopener" class="co-pay-link" onclick="markAwaitingPayment(${i})">ادفع الآن ←</a>`
+        : `<span class="co-pay-disabled">مفيش رابط دفع لسه</span>`;
+      const qtyNote = qty > 1
+        ? `<div style="font-size:11px;color:var(--orange-deep);margin-top:4px">⚠ رابط الدفع لوحدة واحدة بس — العميل هيحتاج يدوس "ادفع الآن" ${qty} مرات</div>`
+        : '';
+      const hasProof = !!paymentProofs[i];
+      return `
+        <div class="co-item" style="flex-direction:column;align-items:stretch;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+            <div class="co-item-info">
+              <div class="co-item-name">${item.name}${qty > 1 ? ` <span style="color:var(--text-muted);font-weight:400">× ${qty}</span>` : ''}</div>
+              <div class="co-item-price">${qty > 1 ? `${formatPrice(item.price)} × ${qty} = ${formatPrice(lineTotal)}` : formatPrice(item.price)}</div>
+              ${qtyNote}
+            </div>
+            <div class="co-item-actions">
+              ${payHTML}
+            </div>
+          </div>
+          <div style="background:var(--bg);border-radius:12px;padding:12px 14px">
+            <p style="font-size:12px;color:var(--orange-deep);margin-bottom:8px">⚠ بعد الدفع، لازم يتعمل سكرين شوت لتأكيد العملية ويترفع هنا — من غيره زرار "تم الدفع" مش هيشتغل.</p>
+            <input type="file" accept="image/*" onchange="handleProofUpload(${i}, this)" style="font-size:12.5px;font-family:'Tajawal',sans-serif">
+            <span id="co-proof-status-${i}" style="font-size:12px;color:var(--teal);margin-inline-start:8px">${hasProof ? '✓ الصورة اتضافت' : ''}</span>
+          </div>
+          <button class="co-paid-btn" id="co-paid-btn-${i}" ${hasProof ? '' : 'disabled'} onclick="markItemPaid(${i})">تم الدفع ✓</button>
+        </div>
+      `;
+    }).join('');
+    const total = cartData.reduce((sum, item) => sum + Number(item.price) * (item.quantity || 1), 0);
+    totalRow.style.display = 'flex';
+    document.getElementById('co-total-amount').textContent = formatPrice(total);
+  }
+
+  function markAwaitingPayment(index){
+    // بس بتفتح رابط الدفع في تاب جديد — السلة تفضل زي ما هي لحد ما العميل يأكد إنه دفع
+  }
+
+  async function markItemPaid(index){
+    if(!paymentProofs[index]){
+      alert('لازم يترفع صورة تأكيد الدفع الأول.');
+      return;
+    }
+    const cartData = loadCart();
+    if(!cartData[index]) return;
+    const item = cartData[index];
+    const proof = paymentProofs[index];
+    const downloadToken = await recordOrder(item, proof);
+    delete paymentProofs[index];
+    if(downloadToken){
+      completedDownloads.push({
+        name: item.name,
+        downloadUrl: `${WORKER_API}/download?token=${downloadToken}`
+      });
+      renderDownloadsList();
+    }
+    cartData.splice(index, 1);
+    cart = cartData;
+    saveCart();
+    renderCheckoutSummary();
+    renderCart();
+  }
+
+  renderCheckoutSummary();
+</script>
+</body>
+</html>

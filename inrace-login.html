@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول — Inrace Store</title>
+<meta name="description" content="سجّل دخولك أو أنشئي حساب جديد مجاني في Inrace Store للوصول لكل منتجاتك الرقمية.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<section class="hero" style="padding:70px 0;text-align:center">
+  <div class="wrap" style="max-width:420px;margin:0 auto">
+    <div class="eyebrow" style="margin:0 auto 18px"><span class="eyebrow-dot"></span> Inrace</div>
+    <h1 id="auth-heading" style="font-size:clamp(1.7rem,3.2vw,2.2rem)">تسجيل الدخول</h1>
+    <p class="hero-sub" id="auth-subhead" style="margin:0 auto 32px">ادخلي بحسابك أو اعمل حساب جديد لمتابعة التسوق.</p>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;text-align:right">
+      <label style="display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:8px">الإيميل</label>
+      <input id="auth-email" type="email" placeholder="you@example.com"
+        style="width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:14.5px;margin-bottom:18px;outline:none;direction:ltr;text-align:left">
+
+      <label style="display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:8px">كلمة السر</label>
+      <input id="auth-password" type="password" placeholder="••••••••"
+        style="width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:14.5px;margin-bottom:6px;outline:none;direction:ltr;text-align:left">
+      <p id="auth-password-hint" style="display:none;font-size:12px;color:var(--text-muted);margin-bottom:14px">8 حروف على الأقل، وتحتوي على حرف ورقم.</p>
+
+      <div id="auth-confirm-wrap" style="display:none">
+        <label style="display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:8px">تأكيد كلمة السر</label>
+        <input id="auth-confirm" type="password" placeholder="••••••••"
+          style="width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:14.5px;margin-bottom:18px;outline:none;direction:ltr;text-align:left">
+      </div>
+
+      <div id="auth-whatsapp-wrap" style="display:none">
+        <label style="display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:8px">رقم الواتساب</label>
+        <input id="auth-whatsapp" type="text" placeholder="+9665xxxxxxxx"
+          style="width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:14.5px;margin-bottom:18px;outline:none;direction:ltr;text-align:left">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:8px">المدينة</label>
+            <input id="auth-city" type="text" placeholder="الرياض"
+              style="width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:14.5px;margin-bottom:18px;outline:none">
+          </div>
+          <div>
+            <label style="display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:8px">الدولة</label>
+            <input id="auth-country" type="text" placeholder="السعودية"
+              style="width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:14.5px;margin-bottom:18px;outline:none">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="auth-submit-btn" style="width:100%;justify-content:center;margin-top:8px" onclick="submitAuth()">دخول</button>
+      <p id="auth-error" style="margin-top:14px;font-size:13.5px;color:#d94848;display:none"></p>
+      <p id="auth-forgot-status" style="margin-top:10px;font-size:13px;color:var(--teal);display:none"></p>
+
+      <p id="auth-forgot-wrap" style="margin-top:14px;font-size:13px">
+        <a href="#" onclick="submitForgotPassword(event)" style="color:var(--text-muted)">نسيت كلمة السر؟</a>
+      </p>
+
+      <p style="margin-top:14px;font-size:13.5px;color:var(--text-muted)">
+        <span id="auth-toggle-text">معنديش حساب؟</span>
+        <a href="#" onclick="toggleAuthMode(event)" style="color:var(--orange-deep);font-weight:700">
+          <span id="auth-toggle-link">سجّل دلوقتي</span>
+        </a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<script src="admin-data.js"></script>
+<script src="script.js"></script>
+<script>
+  let authMode = 'login';
+
+  function toggleAuthMode(event){
+    if(event) event.preventDefault();
+    authMode = (authMode === 'login') ? 'signup' : 'login';
+    document.getElementById('auth-heading').textContent = authMode === 'login' ? 'تسجيل الدخول' : 'حساب جديد';
+    document.getElementById('auth-subhead').textContent = authMode === 'login'
+      ? 'ادخلي بحسابك أو اعمل حساب جديد لمتابعة التسوق.'
+      : 'إيميل وكلمة سر بس، وهتقدري تستخدمي حسابك في كل مرة تدخلي فيها الموقع.';
+    document.getElementById('auth-confirm-wrap').style.display = authMode === 'signup' ? 'block' : 'none';
+    document.getElementById('auth-whatsapp-wrap').style.display = authMode === 'signup' ? 'block' : 'none';
+    document.getElementById('auth-password-hint').style.display = authMode === 'signup' ? 'block' : 'none';
+    document.getElementById('auth-forgot-wrap').style.display = authMode === 'login' ? 'block' : 'none';
+    document.getElementById('auth-submit-btn').textContent = authMode === 'login' ? 'دخول' : 'إنشاء الحساب';
+    document.getElementById('auth-toggle-text').textContent = authMode === 'login' ? 'معنديش حساب؟' : 'عندك حساب بالفعل؟';
+    document.getElementById('auth-toggle-link').textContent = authMode === 'login' ? 'سجّل دلوقتي' : 'سجّل دخولك';
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  function showAuthError(msg){
+    const errorEl = document.getElementById('auth-error');
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+  }
+
+  async function submitForgotPassword(event){
+    if(event) event.preventDefault();
+    const email = document.getElementById('auth-email').value.trim();
+    if(!email){
+      showAuthError('اكتب إيميلك في الخانة فوق الأول، وبعدين دوس "نسيت كلمة السر؟".');
+      return;
+    }
+    const statusEl = document.getElementById('auth-forgot-status');
+    statusEl.style.display = 'none';
+    try{
+      await fetch(`${WORKER_API}/forgot-password`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({email})
+      });
+    }catch(e){
+      // نكمل عادي حتى لو حصل خطأ في الشبكة — الرسالة للعميل واحدة برضو لأسباب أمان
+    }
+    statusEl.textContent = 'لو الإيميل ده مسجل عندنا، هيوصلك رابط لإعادة تعيين كلمة السر خلال دقايق.';
+    statusEl.style.display = 'block';
+  }
+
+  async function submitAuth(){
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+
+    if(!email || !password){
+      showAuthError('من فضلك اكتب الإيميل وكلمة السر.');
+      return;
+    }
+
+    // دخول الموظفين/المدير يشتغل من أي وضع، طالما البيانات مطابقة
+    if(isStaffCredentials(email, password)){
+      setSession({role: 'staff', email});
+      window.location.href = 'inrace-employee-dashboard.html';
+      return;
+    }
+
+    const submitBtn = document.getElementById('auth-submit-btn');
+    submitBtn.disabled = true;
+
+    if(authMode === 'login'){
+      try{
+        const res = await fetch(`${WORKER_API}/login`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({email, password})
+        });
+        const data = await res.json();
+        submitBtn.disabled = false;
+        if(!res.ok){
+          showAuthError(data.error || 'الإيميل أو كلمة السر غلط.');
+          return;
+        }
+        setSession({role: 'customer', email});
+        window.location.href = 'index.html';
+      }catch(e){
+        submitBtn.disabled = false;
+        showAuthError('حصل خطأ في الاتصال بالسيرفر. جرب تاني.');
+      }
+    } else {
+      if(password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)){
+        submitBtn.disabled = false;
+        showAuthError('كلمة السر لازم تكون 8 حروف على الأقل، وتحتوي على حرف ورقم.');
+        return;
+      }
+      const confirm = document.getElementById('auth-confirm').value;
+      if(password !== confirm){
+        submitBtn.disabled = false;
+        showAuthError('كلمة السر وتأكيدها مش متطابقين.');
+        return;
+      }
+      const whatsapp = document.getElementById('auth-whatsapp').value.trim();
+      if(!whatsapp){
+        submitBtn.disabled = false;
+        showAuthError('من فضلك اكتب رقم الواتساب.');
+        return;
+      }
+      const city = document.getElementById('auth-city').value.trim();
+      const country = document.getElementById('auth-country').value.trim();
+
+      try{
+        const res = await fetch(`${WORKER_API}/signup`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({email, password, whatsapp, city, country})
+        });
+        const data = await res.json();
+        submitBtn.disabled = false;
+        if(!res.ok){
+          showAuthError(data.error || 'حصل خطأ في إنشاء الحساب.');
+          return;
+        }
+        setSession({role: 'customer', email});
+        window.location.href = 'index.html';
+      }catch(e){
+        submitBtn.disabled = false;
+        showAuthError('حصل خطأ في الاتصال بالسيرفر. جرب تاني.');
+      }
+    }
+  }
+
+  document.getElementById('auth-password').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') submitAuth();
+  });
+</script>
+</body>
+</html>
