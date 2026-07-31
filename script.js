@@ -374,6 +374,9 @@ document.addEventListener('DOMContentLoaded', async function(){
 });
 
 // ===== "شاهد كيف يعمل" media gallery (see how-it-works-data.js) =====
+// ملحوظة: getMediaItems/saveMediaItems لسه بيستخدمهم لوحة تحكم الموظفين فقط
+// كنسخة احتياطية محلية. المحتوى اللي بيظهر فعليًا للعملاء بييجي من Airtable
+// عن طريق fetchMediaItems تحت.
 function getMediaItems(){
   try{
     const saved = localStorage.getItem('inrace_media');
@@ -383,6 +386,19 @@ function getMediaItems(){
 }
 function saveMediaItems(list){
   localStorage.setItem('inrace_media', JSON.stringify(list));
+}
+
+let cachedMediaItems = null;
+async function fetchMediaItems(){
+  try{
+    const res = await fetch(`${WORKER_API}/media`);
+    const data = await res.json();
+    cachedMediaItems = data.media || [];
+  }catch(e){
+    console.error('تعذّر تحميل المحتوى من السيرفر', e);
+    cachedMediaItems = [];
+  }
+  return cachedMediaItems;
 }
 
 function mediaTypeInfo(type){
@@ -396,12 +412,14 @@ function mediaTypeInfo(type){
   return map[type] || map.other;
 }
 
-function renderMediaGallery(){
+async function renderMediaGallery(){
   const grid = document.getElementById('media-grid');
   if(!grid) return;
-  const items = getMediaItems().filter(m => m.status !== 'draft' && m.status !== 'archived');
+  const all = await fetchMediaItems();
+  const items = all.filter(m => m.status !== 'draft' && m.status !== 'archived');
   if(!items.length){
     grid.innerHTML = '';
+    toggleMediaEmptyState();
     return;
   }
   grid.innerHTML = items.map(m => {
@@ -424,6 +442,7 @@ function renderMediaGallery(){
       </div>
     `;
   }).join('');
+  toggleMediaEmptyState();
 }
 
 function toggleMediaEmptyState(){
@@ -431,7 +450,7 @@ function toggleMediaEmptyState(){
   const emptyState = document.getElementById('hiw-empty-state');
   if(!grid || !emptyState) return;
 
-  const hasMedia = getMediaItems().filter(m => m.status !== 'draft' && m.status !== 'archived').length > 0;
+  const hasMedia = grid.querySelectorAll('.media-card').length > 0;
   emptyState.style.display = hasMedia ? 'none' : 'block';
   grid.style.display = hasMedia ? '' : 'none';
 
@@ -447,8 +466,9 @@ function toggleMediaEmptyState(){
   }
 }
 
-function openMediaModal(id){
-  const m = getMediaItems().find(item => String(item.id) === String(id));
+async function openMediaModal(id){
+  const list = cachedMediaItems || (await fetchMediaItems());
+  const m = list.find(item => String(item.id) === String(id));
   if(!m) return;
   const info = mediaTypeInfo(m.type);
 
@@ -495,9 +515,8 @@ document.addEventListener('click', function(e){
   }
 });
 
-document.addEventListener('DOMContentLoaded', function(){
-  renderMediaGallery();
-  toggleMediaEmptyState();
+document.addEventListener('DOMContentLoaded', async function(){
+  await renderMediaGallery();
 });
 
 // ===== Contact modal (email + WhatsApp — see contact-data.js) =====
