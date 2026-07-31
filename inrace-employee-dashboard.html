@@ -329,22 +329,20 @@
         <div class="dash-upload">
           <div class="dash-upload-preview" id="mf-thumb-preview">✨</div>
           <div class="dash-upload-input">
-            <input type="file" id="mf-thumb-file" accept="image/*" onchange="handleImageUpload(this, 'mf-thumbnail', 'mf-thumb-preview')">
-            <div class="dash-upload-hint">صورة JPG أو PNG</div>
+            <input type="file" id="mf-thumb-file" accept="image/*" onchange="handleMediaFileSelect(this, 'thumb')">
+            <div class="dash-upload-hint" id="mf-thumb-status">صورة JPG أو PNG</div>
           </div>
         </div>
-        <input type="hidden" id="mf-thumbnail">
       </div>
       <div class="dash-field" id="mf-video-upload-field">
         <label>ملف الفيديو (لو النوع فيديو)</label>
         <div class="dash-upload">
           <div class="dash-upload-preview" id="mf-video-preview">🎬</div>
           <div class="dash-upload-input">
-            <input type="file" id="mf-video-file" accept="video/*" onchange="handleVideoUpload(this)">
-            <div class="dash-upload-hint">فيديو MP4، حاولي تخلّيه صغير الحجم قد الإمكان</div>
+            <input type="file" id="mf-video-file" accept="video/*" onchange="handleMediaFileSelect(this, 'media')">
+            <div class="dash-upload-hint" id="mf-video-status">فيديو MP4، حاولي تخلّيه صغير الحجم قد الإمكان</div>
           </div>
         </div>
-        <input type="hidden" id="mf-mediaurl">
       </div>
       <div class="dash-field">
         <label>رابط خارجي (اختياري — مقال كامل، عرض تقديمي...)</label>
@@ -479,7 +477,7 @@
 
   function updateStats(){
     const products = cachedDashProducts;
-    const media = getMediaItems();
+    const media = cachedDashMedia;
     document.getElementById('stat-products').textContent = products.length;
     document.getElementById('stat-media').textContent = media.length;
     const drafts = products.filter(p => p.status === 'draft').length + media.filter(m => m.status === 'draft').length;
@@ -499,18 +497,30 @@
     reader.readAsDataURL(file);
   }
 
-  function handleVideoUpload(input){
+  function handleMediaFileSelect(input, kind){
     const file = input.files[0];
-    if(!file) return;
-    if(file.size > 4 * 1024 * 1024){
-      alert('الفيديو ده كبير شوية وممكن يفشل يتحفظ (حد التخزين المحلي محدود). جرب فيديو أصغر لو تقدري.');
+    const previewId = kind === 'thumb' ? 'mf-thumb-preview' : 'mf-video-preview';
+    const statusText = kind === 'thumb' ? '📷' : '🎬';
+    if(!file){
+      if(kind === 'thumb') selectedMediaThumbFile = null; else selectedMediaVideoFile = null;
+      return;
     }
+    if(kind === 'thumb') selectedMediaThumbFile = file; else selectedMediaVideoFile = file;
+
     const reader = new FileReader();
     reader.onload = function(e){
-      document.getElementById('mf-mediaurl').value = e.target.result;
-      document.getElementById('mf-video-preview').innerHTML = `<video src="${e.target.result}" muted></video>`;
+      const preview = document.getElementById(previewId);
+      if(kind === 'thumb'){
+        preview.innerHTML = `<img src="${e.target.result}" alt="">`;
+      } else {
+        preview.innerHTML = `<video src="${e.target.result}" muted></video>`;
+      }
     };
     reader.readAsDataURL(file);
+
+    if(file.size > 8 * 1024 * 1024){
+      alert('الملف ده كبير شوية وممكن ياخد وقت أطول أو يفشل يترفع. جربي ملف أصغر لو ممكن.');
+    }
   }
 
   function onMediaTypeChange(){
@@ -704,14 +714,26 @@
   }
 
   // ===== Media tab =====
-  function renderMediaList(){
+  let cachedDashMedia = [];
+  let selectedMediaThumbFile = null;
+  let selectedMediaVideoFile = null;
+
+  async function renderMediaList(){
     const list = document.getElementById('media-list');
-    const items = getMediaItems();
-    if(!items.length){
+    list.innerHTML = '<div class="dash-empty">بيتحمّل...</div>';
+    try{
+      const res = await fetch(`${WORKER_API}/media`);
+      const data = await res.json();
+      cachedDashMedia = data.media || [];
+    }catch(e){
+      list.innerHTML = '<div class="dash-empty">تعذّر تحميل المحتوى، جربي تاني.</div>';
+      return;
+    }
+    if(!cachedDashMedia.length){
       list.innerHTML = '<div class="dash-empty"><div class="dash-empty-icon">🎬</div>مفيش محتوى لسه — دوس "إضافة عنصر جديد" عشان تبدئي.</div>';
       return;
     }
-    list.innerHTML = items.map(m => `
+    list.innerHTML = cachedDashMedia.map(m => `
       <div class="dash-list-item">
         <div class="dash-list-thumb">${m.thumbnail ? `<img src="${m.thumbnail}" alt="">` : '✨'}</div>
         <div class="dash-list-info">
@@ -732,18 +754,26 @@
     form.classList.add('open');
     const thumbPreview = document.getElementById('mf-thumb-preview');
     const videoPreview = document.getElementById('mf-video-preview');
+    selectedMediaThumbFile = null;
+    selectedMediaVideoFile = null;
+    document.getElementById('mf-thumb-file').value = '';
+    document.getElementById('mf-video-file').value = '';
     if(id){
-      const m = getMediaItems().find(item => String(item.id) === String(id));
+      const m = cachedDashMedia.find(item => String(item.id) === String(id));
       if(!m) return;
       document.getElementById('mf-id').value = m.id;
       document.getElementById('mf-title').value = m.title || '';
       document.getElementById('mf-type').value = m.type || 'image';
       document.getElementById('mf-desc').value = m.description || '';
       document.getElementById('mf-fulldesc').value = m.fullDescription || '';
-      document.getElementById('mf-thumbnail').value = m.thumbnail || '';
       thumbPreview.innerHTML = m.thumbnail ? `<img src="${m.thumbnail}" alt="">` : '✨';
-      document.getElementById('mf-mediaurl').value = m.mediaUrl || '';
-      videoPreview.innerHTML = (m.mediaUrl && m.mediaUrl.startsWith('data:video')) ? `<video src="${m.mediaUrl}" muted></video>` : '🎬';
+      document.getElementById('mf-thumb-status').textContent = m.thumbnail
+        ? '✓ فيه صورة بالفعل — اختاري صورة جديدة بس لو عايزة تستبدليها'
+        : 'صورة JPG أو PNG';
+      videoPreview.innerHTML = (m.type === 'video' && m.mediaUrl) ? `<video src="${m.mediaUrl}" muted></video>` : '🎬';
+      document.getElementById('mf-video-status').textContent = (m.type === 'video' && m.mediaUrl)
+        ? '✓ فيه فيديو بالفعل — اختاري فيديو جديد بس لو عايزة تستبدليه'
+        : 'فيديو MP4، حاولي تخلّيه صغير الحجم قد الإمكان';
       document.getElementById('mf-link').value = m.externalLink || '';
       document.getElementById('mf-status').value = m.status || 'published';
     } else {
@@ -752,10 +782,10 @@
       document.getElementById('mf-type').value = 'image';
       document.getElementById('mf-desc').value = '';
       document.getElementById('mf-fulldesc').value = '';
-      document.getElementById('mf-thumbnail').value = '';
       thumbPreview.innerHTML = '✨';
-      document.getElementById('mf-mediaurl').value = '';
+      document.getElementById('mf-thumb-status').textContent = 'صورة JPG أو PNG';
       videoPreview.innerHTML = '🎬';
+      document.getElementById('mf-video-status').textContent = 'فيديو MP4، حاولي تخلّيه صغير الحجم قد الإمكان';
       document.getElementById('mf-link').value = '';
       document.getElementById('mf-status').value = 'published';
     }
@@ -767,43 +797,94 @@
     document.getElementById('media-form').classList.remove('open');
   }
 
-  function saveMediaForm(){
+  async function saveMediaForm(){
     const title = document.getElementById('mf-title').value.trim();
     if(!title){
-      alert('اكتب العنوان على الأقل.');
+      alert('اكتبي العنوان على الأقل.');
       return;
     }
-    const id = document.getElementById('mf-id').value || ('m' + Date.now());
-    const item = {
-      id,
+    const saveBtn = document.querySelector('#media-form .btn-primary');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'بيحفظ...';
+
+    const mediaData = {
+      id: document.getElementById('mf-id').value || undefined,
       title,
       type: document.getElementById('mf-type').value,
       description: document.getElementById('mf-desc').value.trim(),
       fullDescription: document.getElementById('mf-fulldesc').value.trim(),
-      thumbnail: document.getElementById('mf-thumbnail').value,
-      mediaUrl: document.getElementById('mf-mediaurl').value,
       externalLink: document.getElementById('mf-link').value.trim(),
       status: document.getElementById('mf-status').value
     };
-    const items = getMediaItems();
-    const existingIndex = items.findIndex(m => String(m.id) === String(id));
-    if(existingIndex > -1) items[existingIndex] = item; else items.push(item);
+
     try{
-      saveMediaItems(items);
+      const res = await fetch(`${WORKER_API}/media`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(mediaData)
+      });
+      const data = await res.json();
+      if(!res.ok){
+        alert('حصل خطأ في الحفظ: ' + (data.error ? JSON.stringify(data.error) : 'غير معروف'));
+        return;
+      }
+      const mediaId = data.id;
+
+      if(selectedMediaThumbFile){
+        saveBtn.textContent = 'بيرفع الصورة...';
+        const base64 = await fileToBase64(selectedMediaThumbFile);
+        await fetch(`${WORKER_API}/media/upload-file`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            mediaId, field: 'thumb',
+            fileBase64: base64,
+            fileName: selectedMediaThumbFile.name,
+            contentType: selectedMediaThumbFile.type || 'application/octet-stream'
+          })
+        });
+      }
+      if(selectedMediaVideoFile){
+        saveBtn.textContent = 'بيرفع الفيديو...';
+        const base64 = await fileToBase64(selectedMediaVideoFile);
+        await fetch(`${WORKER_API}/media/upload-file`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            mediaId, field: 'media',
+            fileBase64: base64,
+            fileName: selectedMediaVideoFile.name,
+            contentType: selectedMediaVideoFile.type || 'application/octet-stream'
+          })
+        });
+      }
+
+      selectedMediaThumbFile = null;
+      selectedMediaVideoFile = null;
+      closeMediaForm();
+      await renderMediaList();
+      updateStats();
     }catch(e){
-      alert('حصل خطأ في الحفظ — على الأرجح الفيديو كبير على مساحة التخزين المتاحة في المتصفح. جرب فيديو أصغر.');
-      return;
+      alert('حصل خطأ في الاتصال بالسيرفر.');
+    }finally{
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'حفظ';
     }
-    closeMediaForm();
-    renderMediaList();
-    updateStats();
   }
 
-  function deleteMediaItem(id){
-    if(!confirm('متأكد إنك عايز تمسحي العنصر ده؟')) return;
-    const items = getMediaItems().filter(m => String(m.id) !== String(id));
-    saveMediaItems(items);
-    renderMediaList();
+  async function deleteMediaItem(id){
+    if(!confirm('متأكدة إنك عايزة تمسحي العنصر ده؟')) return;
+    try{
+      await fetch(`${WORKER_API}/media/delete`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id})
+      });
+    }catch(e){
+      alert('حصل خطأ في الحذف.');
+      return;
+    }
+    await renderMediaList();
     updateStats();
   }
 
@@ -960,7 +1041,7 @@
     const data = {
       exportedAt: new Date().toISOString(),
       products: cachedDashProducts,
-      media: getMediaItems(),
+      media: cachedDashMedia,
       faqs: getFaqs(),
       chats: getChats(),
       orders: getOrders(),
@@ -984,7 +1065,7 @@
   (async function initDashboard(){
     await renderProductsList();
     renderOrdersList();
-    renderMediaList();
+    await renderMediaList();
     renderChatThreadList();
     renderFaqDashList();
     loadContactForm();
