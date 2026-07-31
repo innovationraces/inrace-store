@@ -79,14 +79,14 @@
   </div>
 
   <div class="checkout-card" id="co-downloads-card" style="display:none">
-    <h2>ملفاتك جاهزة ⬇</h2>
-    <p class="sub">دوس على الرابط تحت عشان تنزّل الملف — الرابط ده بيشتغل مرة واحدة بس.</p>
+    <h2>وصلنا طلبك ⏳</h2>
+    <p class="sub">بنراجع صورة تأكيد الدفع دلوقتي. لما نتأكد، هيوصلك رابط تنزيل الملف على إيميلك.</p>
     <div id="co-downloads-list"></div>
   </div>
 
   <p class="co-note">
-    بعد ما تدفعي، هتتحولي لصفحة الدفع في تاب جديد. لما تخلّصي، ارجعي هنا ودوس "تم الدفع ✓"
-    جنب المنتج عشان نشيله من السلة ويظهرلك رابط تنزيل الملف (لو المنتج ده ليه ملف مرفوع).
+    بعد ما تدفع، هتتحول لصفحة الدفع في تاب جديد. لما تخلّص، ارجع هنا وارفع صورة تأكيد الدفع ودوس "تم الدفع ✓"
+    جنب المنتج عشان نراجعها. بعد المراجعة هيوصلك إيميل فيه رابط تنزيل الملف.
   </p>
 </div>
 
@@ -106,9 +106,7 @@
       <div class="co-item">
         <div class="co-item-info">
           <div class="co-item-name">${d.name}</div>
-        </div>
-        <div class="co-item-actions">
-          <a href="${d.downloadUrl}" target="_blank" rel="noopener" class="co-pay-link">نزّل الملف ⬇</a>
+          <div style="font-size:12.5px;color:var(--text-muted);margin-top:4px">هنبعتلك إيميل بمجرد ما نراجع الطلب</div>
         </div>
       </div>
     `).join('');
@@ -192,13 +190,10 @@
     if(!cartData[index]) return;
     const item = cartData[index];
     const proof = paymentProofs[index];
-    const downloadToken = await recordOrder(item, proof);
+    const success = await recordOrder(item, proof);
     delete paymentProofs[index];
-    if(downloadToken){
-      completedDownloads.push({
-        name: item.name,
-        downloadUrl: `${WORKER_API}/download?token=${downloadToken}`
-      });
+    if(success){
+      completedDownloads.push({ name: item.name });
       renderDownloadsList();
     }
     cartData.splice(index, 1);
