@@ -894,8 +894,9 @@ async function recordOrder(item, paymentProof){
   });
   saveOrders(orders);
 
-  // التسجيل الحقيقي في Airtable عن طريق الـ Worker — وبيرجعلنا رابط تنزيل سري لمرة واحدة
-  let downloadToken = '';
+  // التسجيل الحقيقي في Airtable — الطلب بيفضل معلّق لحد ما الشركة تراجع صورة تأكيد الدفع
+  // وتوافق عليه، وساعتها بس هيوصل للعميل رابط تنزيل الملف على إيميله.
+  let success = false;
   try{
     const res = await fetch(`${WORKER_API}/orders`, {
       method: 'POST',
@@ -911,11 +912,11 @@ async function recordOrder(item, paymentProof){
       })
     });
     const data = await res.json();
-    downloadToken = data.downloadToken || '';
+    success = res.ok && data.success;
   }catch(e){
     console.error('تعذّر تسجيل الطلب في السيرفر', e);
   }
-  return downloadToken;
+  return success;
 }
 
 // ===== Live chat between customer and staff =====
