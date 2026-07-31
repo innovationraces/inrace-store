@@ -79,6 +79,23 @@ function addToCart(btn){
   openCart();
 }
 
+function buyProductNow(p){
+  const existing = cart.find(item => item.name === p.name && item.paymentLink === (p.paymentLink || ''));
+  if(existing){
+    existing.quantity = (existing.quantity || 1) + 1;
+  } else {
+    cart.push({
+      name: p.name,
+      price: p.price,
+      paymentLink: p.paymentLink || '',
+      productId: p.id || '',
+      quantity: 1
+    });
+  }
+  saveCart();
+  window.location.href = 'inrace-checkout.html';
+}
+
 function changeCartQuantity(index, delta){
   const item = cart[index];
   if(!item) return;
@@ -217,6 +234,7 @@ async function renderProducts(){
   const products = all.filter(p => p.status !== 'draft' && p.status !== 'archived');
   if(!products.length){
     grid.innerHTML = '';
+    toggleEmptyState();
     return;
   }
 
@@ -249,6 +267,7 @@ async function renderProducts(){
       </div>
     `;
   }).join('');
+  toggleEmptyState();
 }
 
 // ===== Product detail modal =====
@@ -277,8 +296,15 @@ async function openProductModal(id){
   addBtn.setAttribute('data-payment-link', p.paymentLink || '');
   addBtn.setAttribute('data-id', p.id || '');
   addBtn.disabled = isSoldOut;
-  addBtn.textContent = isSoldOut ? 'غير متوفر حالياً' : 'أضف للسلة ←';
+  addBtn.textContent = isSoldOut ? 'غير متوفر حالياً' : 'أضف للسلة';
   addBtn.onclick = isSoldOut ? null : function(){ addToCart(this); };
+
+  const buyBtn = document.getElementById('modal-buy-btn');
+  if(buyBtn){
+    buyBtn.disabled = isSoldOut;
+    buyBtn.textContent = isSoldOut ? 'غير متوفر حالياً' : 'اشتري الآن ←';
+    buyBtn.onclick = isSoldOut ? null : function(){ buyProductNow(p); };
+  }
 
   document.getElementById('product-modal').classList.add('open');
 }
@@ -341,8 +367,8 @@ function toggleEmptyState(){
   }
 }
 
-document.addEventListener('DOMContentLoaded', function(){
-  renderProducts();
+document.addEventListener('DOMContentLoaded', async function(){
+  await renderProducts();
   toggleEmptyState();
   applyCategoryFilter();
 });
