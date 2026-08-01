@@ -258,8 +258,12 @@
         </div>
       </div>
       <div class="dash-field">
-        <label>رابط الدفع (Zbooni) — العميل هيدفع من هنا</label>
+        <label>رابط الدفع (Zbooni) — احتياطي، بيستخدم لو مفيش ربط أوتوماتيكي</label>
         <input id="pf-payment-link" type="text" placeholder="https://zbooni.com/..." style="direction:ltr;text-align:left">
+      </div>
+      <div class="dash-field">
+        <label>Lemon Squeezy Variant ID — لو موجود، الدفع هيبقى أوتوماتيكي بالكامل من غير مراجعة</label>
+        <input id="pf-ls-variant" type="text" placeholder="مثال: 1973179" style="direction:ltr;text-align:left">
       </div>
       <div class="dash-field">
         <label>ملف المنتج — العميل هيقدر ينزّله بس بعد ما يدفع ويأكد الدفع</label>
@@ -595,6 +599,7 @@
       document.getElementById('pf-price').value = p.price || '';
       document.getElementById('pf-oldprice').value = p.oldPrice || '';
       document.getElementById('pf-payment-link').value = p.paymentLink || '';
+      document.getElementById('pf-ls-variant').value = p.lsVariantId || '';
       document.getElementById('pf-status').value = p.status || 'available';
       document.getElementById('pf-file-status').textContent = p.hasFile
         ? '✓ فيه ملف مرفوع بالفعل — اختاري ملف جديد بس لو عايزة تستبدليه'
@@ -610,6 +615,7 @@
       document.getElementById('pf-price').value = '';
       document.getElementById('pf-oldprice').value = '';
       document.getElementById('pf-payment-link').value = '';
+      document.getElementById('pf-ls-variant').value = '';
       document.getElementById('pf-status').value = 'available';
       document.getElementById('pf-file-status').textContent = 'أي نوع ملف — PDF، فيديو، ضغط ZIP، إلخ.';
     }
@@ -650,6 +656,7 @@
       price: Number(price),
       oldPrice: document.getElementById('pf-oldprice').value ? Number(document.getElementById('pf-oldprice').value) : null,
       paymentLink: document.getElementById('pf-payment-link').value.trim(),
+      lsVariantId: document.getElementById('pf-ls-variant').value.trim(),
       status: document.getElementById('pf-status').value
     };
 
