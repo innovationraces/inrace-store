@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم الموظفين — Inrace Store</title>
+<meta name="description" content="لوحة تحكم داخلية لفريق Inrace لإدارة المنتجات والمحتوى والطلبات.">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  body{background:var(--bg)}
+  .dash-wrap{max-width:1080px;margin:0 auto;padding:36px 20px 80px}
+
+  .dash-banner{
+    position:relative;overflow:hidden;border-radius:26px;
+    background:linear-gradient(135deg,#3d4d7a 0%,var(--navy) 55%,#26304d 100%);
+    padding:34px 36px;margin-bottom:28px;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;
+    animation:dashFadeIn .5s ease;
+  }
+  .dash-banner::before{
+    content:'';position:absolute;top:-70px;left:-40px;width:220px;height:220px;
+    background:radial-gradient(circle,rgba(245,130,31,.28) 0%,transparent 70%);
+  }
+  .dash-banner::after{
+    content:'';position:absolute;bottom:-80px;right:-30px;width:200px;height:200px;
+    background:radial-gradient(circle,rgba(62,198,198,.22) 0%,transparent 70%);
+  }
+  .dash-banner-text{position:relative;z-index:1}
+  .dash-banner-eyebrow{color:#ffcd94;font-size:12.5px;font-weight:800;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .dash-banner-eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);display:inline-block;animation:dashPulse 1.8s infinite}
+  .dash-banner h1{color:#fff;font-size:1.7rem;font-weight:900;margin-bottom:6px}
+  .dash-banner p{color:#c9d0ec;font-size:13.5px}
+  .dash-logout-btn{
+    position:relative;z-index:1;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.25);
+    color:#fff;padding:11px 22px;border-radius:100px;font-weight:700;font-size:13.5px;cursor:pointer;
+    font-family:'Tajawal',sans-serif;transition:background .2s;
+  }
+  .dash-logout-btn:hover{background:rgba(255,255,255,.2)}
+
+  .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px}
+  .dash-stat-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px 22px;
+    display:flex;align-items:center;gap:14px;animation:dashFadeUp .5s ease backwards;
+    transition:transform .2s,box-shadow .2s;
+  }
+  .dash-stat-card:hover{transform:translateY(-3px);box-shadow:0 16px 32px -18px rgba(14,33,88,.25)}
+  .dash-stat-card:nth-child(1){animation-delay:.05s}
+  .dash-stat-card:nth-child(2){animation-delay:.12s}
+  .dash-stat-card:nth-child(3){animation-delay:.19s}
+  .dash-stat-icon{
+    width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    font-size:22px;flex-shrink:0;
+  }
+  .dash-stat-icon.orange{background:var(--orange-soft);color:var(--orange-deep)}
+  .dash-stat-icon.teal{background:var(--teal-soft);color:var(--teal)}
+  .dash-stat-icon.navy{background:#e7ebfa;color:var(--navy)}
+  .dash-stat-num{font-size:1.5rem;font-weight:900;color:var(--navy);line-height:1.1}
+  .dash-stat-label{font-size:12.5px;color:var(--text-muted);margin-top:2px}
+
+  .dash-tabs{display:flex;gap:10px;margin-bottom:26px;flex-wrap:wrap}
+  .dash-tab{
+    background:var(--surface);border:1.5px solid var(--border);border-radius:100px;padding:11px 24px;
+    font-size:14px;font-weight:700;color:var(--navy);cursor:pointer;display:flex;align-items:center;gap:8px;
+    transition:all .2s;
+  }
+  .dash-tab:hover{border-color:var(--orange)}
+  .dash-tab.active{background:linear-gradient(135deg,var(--orange),var(--orange-deep));color:#fff;border-color:transparent;box-shadow:0 10px 24px -12px rgba(245,130,31,.55)}
+
+  .dash-panel{display:none}
+  .dash-panel.active{display:block;animation:dashFadeUp .35s ease}
+
+  .dash-form{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:28px;display:none}
+  .dash-form.open{display:block;animation:dashFadeUp .3s ease}
+  .dash-field{margin-bottom:16px}
+  .dash-field label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px}
+  .dash-field input[type=text],.dash-field input[type=email],.dash-field input[type=number],.dash-field select,.dash-field textarea{
+    width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--border);
+    font-family:'Tajawal',sans-serif;font-size:14px;outline:none;transition:border-color .15s;
+  }
+  .dash-field input:focus,.dash-field select:focus,.dash-field textarea:focus{border-color:var(--orange)}
+  .dash-field textarea{resize:vertical;min-height:70px}
+  .dash-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+  .dash-upload{
+    display:flex;align-items:center;gap:14px;border:1.5px dashed var(--border);border-radius:14px;
+    padding:14px;background:var(--bg);
+  }
+  .dash-upload-preview{
+    width:56px;height:56px;border-radius:10px;background:var(--surface);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0;
+  }
+  .dash-upload-preview img,.dash-upload-preview video{width:100%;height:100%;object-fit:cover}
+  .dash-upload-input{flex:1}
+  .dash-upload-input input[type=file]{font-size:13px;font-family:'Tajawal',sans-serif}
+  .dash-upload-hint{font-size:11.5px;color:var(--text-muted);margin-top:4px}
+
+  .dash-list-item{
+    display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);
+    border-radius:16px;padding:14px 18px;margin-bottom:12px;transition:transform .18s,box-shadow .18s;
+    animation:dashFadeUp .35s ease backwards;
+  }
+  .dash-list-item:hover{transform:translateY(-2px);box-shadow:0 14px 30px -18px rgba(14,33,88,.22)}
+  .dash-list-thumb{width:54px;height:54px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0}
+  .dash-list-thumb img,.dash-list-thumb video{width:100%;height:100%;object-fit:cover}
+  .dash-list-info{flex:1;min-width:0}
+  .dash-list-title{font-weight:800;color:var(--navy);font-size:14.5px}
+  .dash-list-meta{font-size:12.5px;color:var(--text-muted);margin-top:2px}
+  .dash-status-tag{font-size:11px;font-weight:800;padding:5px 12px;border-radius:100px;color:#fff;flex-shrink:0}
+  .dash-status-available{background:var(--teal)}
+  .dash-status-soldout{background:#3a3f4d}
+  .dash-status-draft{background:#b8860b}
+  .dash-status-archived{background:#9a9a9a}
+  .dash-status-published{background:var(--teal)}
+  .dash-actions{display:flex;gap:8px;flex-shrink:0}
+  .dash-actions button{background:none;border:none;cursor:pointer;font-size:13px;font-weight:700;padding:6px 10px;border-radius:8px;transition:background .15s}
+  .dash-edit-btn{color:var(--navy)}
+  .dash-edit-btn:hover{background:#e7ebfa}
+  .dash-delete-btn{color:#d94848}
+  .dash-delete-btn:hover{background:#fde8e8}
+  .dash-empty{text-align:center;padding:50px 20px;color:var(--text-muted);font-size:14px}
+  .dash-empty-icon{font-size:36px;margin-bottom:10px}
+
+  @keyframes dashFadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes dashFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes dashPulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  @media(max-width:720px){
+    .dash-stats{grid-template-columns:1fr}
+    .dash-grid-2{grid-template-columns:1fr}
+    .dash-list-item{flex-wrap:wrap}
+    .dash-list-info{min-width:140px}
+    .dash-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+    .dash-tab{white-space:nowrap}
+    #panel-chats > div{grid-template-columns:1fr !important}
+  }
+</style>
+</head>
+<body>
+
+<script src="admin-data.js"></script>
+<script src="products-data.js"></script>
+<script src="how-it-works-data.js"></script>
+<script src="contact-data.js"></script>
+<script src="script.js"></script>
+
+<script>
+  const session = getSession();
+  if(!session || session.role !== 'staff'){
+    window.location.href = 'inrace-login.html';
+  }
+</script>
+
+<div class="dash-wrap">
+  <div class="dash-banner">
+    <div class="dash-banner-text">
+      <div class="dash-banner-eyebrow"><span class="dot"></span> لوحة تحكم Inrace</div>
+      <h1 id="dash-welcome">أهلاً بيك 👋</h1>
+      <p>هنا تقدري تضيفي وتعدّل كل حاجة في المتجر بنفسك.</p>
+    </div>
+    <div style="position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="dash-logout-btn" onclick="window.location.href='index.html'">الصفحة الرئيسية ←</button>
+      <button class="dash-logout-btn" onclick="logoutSession()">تسجيل الخروج ←</button>
+    </div>
+  </div>
+
+  <div class="dash-stats">
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon orange">🛍️</div>
+      <div>
+        <div class="dash-stat-num" id="stat-products">0</div>
+        <div class="dash-stat-label">منتج إجمالي</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon teal">🎬</div>
+      <div>
+        <div class="dash-stat-num" id="stat-media">0</div>
+        <div class="dash-stat-label">عنصر محتوى</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon navy">📝</div>
+      <div>
+        <div class="dash-stat-num" id="stat-drafts">0</div>
+        <div class="dash-stat-label">مسودة قيد الإعداد</div>
+      </div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dash-stat-icon orange">📦</div>
+      <div>
+        <div class="dash-stat-num" id="stat-orders">0</div>
+        <div class="dash-stat-label">طلب مكتمل</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-tabs">
+    <div class="dash-tab active" data-tab="products" onclick="switchDashTab('products')">🛍️ المنتجات</div>
+    <div class="dash-tab" data-tab="orders" onclick="switchDashTab('orders')">📦 الطلبات</div>
+    <div class="dash-tab" data-tab="media" onclick="switchDashTab('media')">🎬 شاهد كيف يعمل</div>
+    <div class="dash-tab" data-tab="chats" onclick="switchDashTab('chats')">💬 المحادثات</div>
+    <div class="dash-tab" data-tab="faq" onclick="switchDashTab('faq')">❓ الأسئلة الشائعة</div>
+    <div class="dash-tab" data-tab="contact" onclick="switchDashTab('contact')">📞 التواصل</div>
+  </div>
+
+  <!-- ===== المنتجات ===== -->
+  <div class="dash-panel active" id="panel-products">
+    <button class="btn btn-primary" onclick="openProductForm()">+ إضافة منتج جديد</button>
+
+    <div class="dash-form" id="product-form">
+      <input type="hidden" id="pf-id">
+      <div class="dash-grid-2">
+        <div class="dash-field">
+          <label>اسم المنتج</label>
+          <input id="pf-name" type="text">
+        </div>
+        <div class="dash-field">
+          <label>الفئة</label>
+          <select id="pf-category" onchange="onCategorySelectChange()">
+            <option value="courses">كورس</option>
+            <option value="templates">قالب</option>
+            <option value="subscriptions">اشتراك</option>
+            <option value="other">منتج آخر</option>
+            <option value="__add_new__">+ أضف فئة جديدة</option>
+          </select>
+        </div>
+      </div>
+      <div class="dash-field">
+        <label>صورة المنتج</label>
+        <div class="dash-upload">
+          <div class="dash-upload-preview" id="pf-image-preview">📦</div>
+          <div class="dash-upload-input">
+            <input type="file" id="pf-image-file" accept="image/*" onchange="handleImageUpload(this, 'pf-image', 'pf-image-preview')">
+            <div class="dash-upload-hint">صورة JPG أو PNG، الأفضل تكون أقل من 1 ميجا</div>
+          </div>
+        </div>
+        <input type="hidden" id="pf-image">
+      </div>
+      <div class="dash-field">
+        <label>وصف قصير (يظهر على الكارت)</label>
+        <textarea id="pf-shortdesc"></textarea>
+      </div>
+      <div class="dash-field">
+        <label>وصف كامل (يظهر لما العميل يدوس على المنتج)</label>
+        <textarea id="pf-fulldesc" style="min-height:110px"></textarea>
+      </div>
+      <div class="dash-grid-2">
+        <div class="dash-field">
+          <label>السعر الحالي ($)</label>
+          <input id="pf-price" type="number" step="0.01">
+        </div>
+        <div class="dash-field">
+          <label>السعر قبل الخصم (اختياري)</label>
+          <input id="pf-oldprice" type="number" step="0.01">
+        </div>
+      </div>
+      <div class="dash-field">
+        <label>رابط الدفع (Zbooni) — احتياطي، بيستخدم لو مفيش ربط أوتوماتيكي</label>
+        <input id="pf-payment-link" type="text" placeholder="https://zbooni.com/..." style="direction:ltr;text-align:left">
+      </div>
+      <div class="dash-field">
+        <label>Lemon Squeezy Variant ID — لو موجود، الدفع هيبقى أوتوماتيكي بالكامل من غير مراجعة</label>
+        <input id="pf-ls-variant" type="text" placeholder="مثال: 1973179" style="direction:ltr;text-align:left">
+      </div>
+      <div class="dash-field">
+        <label>ملف المنتج — العميل هيقدر ينزّله بس بعد ما يدفع ويأكد الدفع</label>
+        <div class="dash-upload">
+          <div class="dash-upload-preview" id="pf-file-preview">📄</div>
+          <div class="dash-upload-input">
+            <input type="file" id="pf-file-input" onchange="handleProductFileSelect(this)">
+            <div class="dash-upload-hint" id="pf-file-status">أي نوع ملف — PDF، فيديو، ضغط ZIP، إلخ.</div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-field">
+        <label>الحالة</label>
+        <select id="pf-status">
+          <option value="available">متوفر</option>
+          <option value="soldout">غير متوفر</option>
+          <option value="draft">مسودة (مخفي عن العملاء)</option>
+          <option value="archived">مؤرشف (مخفي عن العملاء)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:6px">
+        <button class="btn btn-primary" onclick="saveProductForm()">حفظ</button>
+        <button class="btn btn-ghost" onclick="closeProductForm()">إلغاء</button>
+      </div>
+    </div>
+
+    <div id="products-list"></div>
+  </div>
+
+  <!-- ===== الطلبات ===== -->
+  <div class="dash-panel" id="panel-orders">
+    <div id="orders-list"></div>
+  </div>
+
+  <!-- ===== شاهد كيف يعمل ===== -->
+  <div class="dash-panel" id="panel-media">
+    <button class="btn btn-primary" onclick="openMediaForm()">+ إضافة عنصر جديد</button>
+
+    <div class="dash-form" id="media-form">
+      <input type="hidden" id="mf-id">
+      <div class="dash-grid-2">
+        <div class="dash-field">
+          <label>العنوان</label>
+          <input id="mf-title" type="text">
+        </div>
+        <div class="dash-field">
+          <label>النوع</label>
+          <select id="mf-type" onchange="onMediaTypeChange()">
+            <option value="image">صورة</option>
+            <option value="video">فيديو</option>
+            <option value="article">مقال</option>
+            <option value="presentation">عرض تقديمي</option>
+            <option value="other">محتوى آخر</option>
+          </select>
+        </div>
+      </div>
+      <div class="dash-field">
+        <label>وصف قصير (يظهر على الكارت)</label>
+        <textarea id="mf-desc"></textarea>
+      </div>
+      <div class="dash-field">
+        <label>الوصف الكامل (يظهر عند فتح التفاصيل)</label>
+        <textarea id="mf-fulldesc" style="min-height:110px"></textarea>
+      </div>
+      <div class="dash-field">
+        <label>صورة الغلاف (تظهر على الكارت)</label>
+        <div class="dash-upload">
+          <div class="dash-upload-preview" id="mf-thumb-preview">✨</div>
+          <div class="dash-upload-input">
+            <input type="file" id="mf-thumb-file" accept="image/*" onchange="handleMediaFileSelect(this, 'thumb')">
+            <div class="dash-upload-hint" id="mf-thumb-status">صورة JPG أو PNG</div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-field" id="mf-video-upload-field">
+        <label>ملف الفيديو (لو النوع فيديو)</label>
+        <div class="dash-upload">
+          <div class="dash-upload-preview" id="mf-video-preview">🎬</div>
+          <div class="dash-upload-input">
+            <input type="file" id="mf-video-file" accept="video/*" onchange="handleMediaFileSelect(this, 'media')">
+            <div class="dash-upload-hint" id="mf-video-status">فيديو MP4، حاولي تخلّيه صغير الحجم قد الإمكان</div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-field">
+        <label>رابط خارجي (اختياري — مقال كامل، عرض تقديمي...)</label>
+        <input id="mf-link" type="text" placeholder="https://...">
+      </div>
+      <div class="dash-field">
+        <label>الحالة</label>
+        <select id="mf-status">
+          <option value="published">منشور</option>
+          <option value="draft">مسودة (مخفي عن العملاء)</option>
+          <option value="archived">مؤرشف (مخفي عن العملاء)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:6px">
+        <button class="btn btn-primary" onclick="saveMediaForm()">حفظ</button>
+        <button class="btn btn-ghost" onclick="closeMediaForm()">إلغاء</button>
+      </div>
+    </div>
+
+    <div id="media-list"></div>
+  </div>
+
+  <!-- ===== المحادثات ===== -->
+  <div class="dash-panel" id="panel-chats">
+    <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start">
+      <div class="dash-form open" style="padding:14px;max-height:520px;overflow-y:auto">
+        <div id="chat-thread-list"></div>
+      </div>
+      <div class="dash-form open" id="chat-dash-panel" style="padding:0;overflow:hidden">
+        <div id="chat-dash-empty" class="dash-empty"><div class="dash-empty-icon">💬</div>اختار محادثة من القايمة عشان تردّ عليها.</div>
+        <div id="chat-dash-thread" style="display:none">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:800;color:var(--navy)" id="chat-dash-name"></div>
+          <div id="chat-dash-messages" style="padding:16px 20px;height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px"></div>
+          <div style="display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--border)">
+            <input id="chat-dash-input" type="text" placeholder="اكتب ردك..." style="flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:14px;outline:none">
+            <button class="btn btn-primary" onclick="sendStaffChatMessage()">إرسال</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== الأسئلة الشائعة ===== -->
+  <div class="dash-panel" id="panel-faq">
+    <div id="faq-dash-list"></div>
+  </div>
+
+  <!-- ===== التواصل ===== -->
+  <div class="dash-panel" id="panel-contact">
+    <div class="dash-form open" style="max-width:480px">
+      <div class="dash-field">
+        <label>الإيميل</label>
+        <input id="cf-email" type="email">
+      </div>
+      <div class="dash-field">
+        <label>رقم الواتساب (بالصيغة الدولية، يبدأ بـ +)</label>
+        <input id="cf-whatsapp" type="text" style="direction:ltr;text-align:left">
+      </div>
+      <button class="btn btn-primary" onclick="saveContactForm()">حفظ التغييرات</button>
+      <p id="cf-status" style="margin-top:14px;font-size:13.5px;color:var(--teal);display:none">تم الحفظ ✓</p>
+    </div>
+
+    <div class="dash-form open" style="max-width:480px">
+      <div class="section-eyebrow">نسخة احتياطية</div>
+      <h3 style="color:var(--navy);margin-bottom:8px">تحميل نسخة من كل بيانات الموقع</h3>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+        كل البيانات (المنتجات، المحتوى، الأسئلة، المحادثات، الطلبات، بيانات التواصل) متخزّنة حاليًا في متصفحك بس.
+        نزّل نسخة احتياطية بشكل دوري، ولما نعمل السيرفر هنستخدمها عشان محدش يضيع.
+      </p>
+      <button class="btn btn-ghost" onclick="exportAllData()">⬇ تحميل نسخة احتياطية (JSON)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== General =====
+  if(session) document.getElementById('dash-welcome').textContent = 'أهلاً، ' + session.email + ' 👋';
+
+  function switchDashTab(tab){
+    document.querySelectorAll('.dash-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  const categoryLabels = {courses:'كورس', templates:'قالب', subscriptions:'اشتراك', other:'منتج آخر'};
+  const productStatusLabels = {available:'متوفر', soldout:'غير متوفر', draft:'مسودة', archived:'مؤرشف'};
+  const mediaTypeLabels = {image:'صورة', video:'فيديو', article:'مقال', presentation:'عرض تقديمي', other:'محتوى'};
+  const mediaStatusLabels = {published:'منشور', draft:'مسودة', archived:'مؤرشف'};
+
+  // ===== Custom product categories =====
+  function getCustomCategories(){
+    try{ return JSON.parse(localStorage.getItem('inrace_custom_categories')) || []; }catch(e){ return []; }
+  }
+  function saveCustomCategories(list){
+    localStorage.setItem('inrace_custom_categories', JSON.stringify(list));
+  }
+  function populateCategorySelect(){
+    const select = document.getElementById('pf-category');
+    const addOption = select.querySelector('option[value="__add_new__"]');
+    getCustomCategories().forEach(name => {
+      if(!select.querySelector(`option[value="${CSS.escape(name)}"]`)){
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.insertBefore(opt, addOption);
+      }
+    });
+  }
+  function onCategorySelectChange(){
+    const select = document.getElementById('pf-category');
+    if(select.value !== '__add_new__') return;
+
+    const name = prompt('اكتب اسم الفئة الجديدة:');
+    if(!name || !name.trim()){
+      select.value = 'courses';
+      return;
+    }
+    const trimmed = name.trim();
+    const custom = getCustomCategories();
+    if(!custom.includes(trimmed)){
+      custom.push(trimmed);
+      saveCustomCategories(custom);
+    }
+    if(!select.querySelector(`option[value="${CSS.escape(trimmed)}"]`)){
+      const opt = document.createElement('option');
+      opt.value = trimmed;
+      opt.textContent = trimmed;
+      select.insertBefore(opt, select.querySelector('option[value="__add_new__"]'));
+    }
+    select.value = trimmed;
+  }
+
+  function updateStats(){
+    const products = cachedDashProducts;
+    const media = cachedDashMedia;
+    document.getElementById('stat-products').textContent = products.length;
+    document.getElementById('stat-media').textContent = media.length;
+    const drafts = products.filter(p => p.status === 'draft').length + media.filter(m => m.status === 'draft').length;
+    document.getElementById('stat-drafts').textContent = drafts;
+    document.getElementById('stat-orders').textContent = cachedDashOrders.filter(o => o.status === 'completed').length;
+  }
+
+  // ===== File upload helpers =====
+  function handleImageUpload(input, targetFieldId, previewId){
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e){
+      document.getElementById(targetFieldId).value = e.target.result;
+      document.getElementById(previewId).innerHTML = `<img src="${e.target.result}" alt="">`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleMediaFileSelect(input, kind){
+    const file = input.files[0];
+    const previewId = kind === 'thumb' ? 'mf-thumb-preview' : 'mf-video-preview';
+    const statusText = kind === 'thumb' ? '📷' : '🎬';
+    if(!file){
+      if(kind === 'thumb') selectedMediaThumbFile = null; else selectedMediaVideoFile = null;
+      return;
+    }
+    if(kind === 'thumb') selectedMediaThumbFile = file; else selectedMediaVideoFile = file;
+
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const preview = document.getElementById(previewId);
+      if(kind === 'thumb'){
+        preview.innerHTML = `<img src="${e.target.result}" alt="">`;
+      } else {
+        preview.innerHTML = `<video src="${e.target.result}" muted></video>`;
+      }
+    };
+    reader.readAsDataURL(file);
+
+    if(file.size > 8 * 1024 * 1024){
+      alert('الملف ده كبير شوية وممكن ياخد وقت أطول أو يفشل يترفع. جربي ملف أصغر لو ممكن.');
+    }
+  }
+
+  function onMediaTypeChange(){
+    const type = document.getElementById('mf-type').value;
+    document.getElementById('mf-video-upload-field').style.display = (type === 'video') ? 'block' : 'none';
+  }
+
+  // ===== Products tab =====
+  let cachedDashProducts = [];
+  let selectedProductFile = null;
+
+  function handleProductFileSelect(input){
+    const file = input.files[0];
+    if(!file){
+      selectedProductFile = null;
+      return;
+    }
+    selectedProductFile = file;
+    document.getElementById('pf-file-status').textContent = `✓ ${file.name} (${Math.round(file.size / 1024)} كيلوبايت) — هيترفع لما تدوسي "حفظ"`;
+    if(file.size > 8 * 1024 * 1024){
+      alert('الملف ده كبير شوية وممكن ياخد وقت أطول أو يفشل يترفع. جربي ملف أصغر لو ممكن.');
+    }
+  }
+
+  async function renderProductsList(){
+    const list = document.getElementById('products-list');
+    list.innerHTML = '<div class="dash-empty">بيتحمّل...</div>';
+    try{
+      const res = await fetch(`${WORKER_API}/products`);
+      const data = await res.json();
+      cachedDashProducts = data.products || [];
+    }catch(e){
+      list.innerHTML = '<div class="dash-empty">تعذّر تحميل المنتجات، جربي تاني.</div>';
+      return;
+    }
+    if(!cachedDashProducts.length){
+      list.innerHTML = '<div class="dash-empty"><div class="dash-empty-icon">🛍️</div>مفيش منتجات لسه — دوس "إضافة منتج جديد" عشان تبدئي.</div>';
+      return;
+    }
+    list.innerHTML = cachedDashProducts.map(p => `
+      <div class="dash-list-item">
+        <div class="dash-list-thumb">${p.image ? `<img src="${p.image}" alt="">` : '📦'}</div>
+        <div class="dash-list-info">
+          <div class="dash-list-title">${p.name} ${p.hasFile ? '📄' : ''}</div>
+          <div class="dash-list-meta">${categoryLabels[p.category] || p.category} · $${p.price}</div>
+        </div>
+        <span class="dash-status-tag dash-status-${p.status || 'available'}">${productStatusLabels[p.status] || 'متوفر'}</span>
+        <div class="dash-actions">
+          <button class="dash-edit-btn" onclick="openProductForm('${p.id}')">تعديل</button>
+          <button class="dash-delete-btn" onclick="deleteProductItem('${p.id}')">حذف</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openProductForm(id){
+    const form = document.getElementById('product-form');
+    form.classList.add('open');
+    const preview = document.getElementById('pf-image-preview');
+    selectedProductFile = null;
+    document.getElementById('pf-file-input').value = '';
+    if(id){
+      const p = cachedDashProducts.find(item => String(item.id) === String(id));
+      if(!p) return;
+      document.getElementById('pf-id').value = p.id;
+      document.getElementById('pf-name').value = p.name || '';
+      document.getElementById('pf-category').value = p.category || 'other';
+      document.getElementById('pf-image').value = p.image || '';
+      preview.innerHTML = p.image ? `<img src="${p.image}" alt="">` : '📦';
+      document.getElementById('pf-shortdesc').value = p.shortDesc || '';
+      document.getElementById('pf-fulldesc').value = p.fullDesc || '';
+      document.getElementById('pf-price').value = p.price || '';
+      document.getElementById('pf-oldprice').value = p.oldPrice || '';
+      document.getElementById('pf-payment-link').value = p.paymentLink || '';
+      document.getElementById('pf-ls-variant').value = p.lsVariantId || '';
+      document.getElementById('pf-status').value = p.status || 'available';
+      document.getElementById('pf-file-status').textContent = p.hasFile
+        ? '✓ فيه ملف مرفوع بالفعل — اختاري ملف جديد بس لو عايزة تستبدليه'
+        : 'أي نوع ملف — PDF، فيديو، ضغط ZIP، إلخ.';
+    } else {
+      document.getElementById('pf-id').value = '';
+      document.getElementById('pf-name').value = '';
+      document.getElementById('pf-category').value = 'courses';
+      document.getElementById('pf-image').value = '';
+      preview.innerHTML = '📦';
+      document.getElementById('pf-shortdesc').value = '';
+      document.getElementById('pf-fulldesc').value = '';
+      document.getElementById('pf-price').value = '';
+      document.getElementById('pf-oldprice').value = '';
+      document.getElementById('pf-payment-link').value = '';
+      document.getElementById('pf-ls-variant').value = '';
+      document.getElementById('pf-status').value = 'available';
+      document.getElementById('pf-file-status').textContent = 'أي نوع ملف — PDF، فيديو، ضغط ZIP، إلخ.';
+    }
+    form.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function closeProductForm(){
+    document.getElementById('product-form').classList.remove('open');
+  }
+
+  function fileToBase64(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function saveProductForm(){
+    const name = document.getElementById('pf-name').value.trim();
+    const price = document.getElementById('pf-price').value;
+    if(!name || price === ''){
+      alert('اكتبي اسم المنتج والسعر على الأقل.');
+      return;
+    }
+    const saveBtn = document.querySelector('#product-form .btn-primary');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'بيحفظ...';
+
+    const productData = {
+      id: document.getElementById('pf-id').value || undefined,
+      name,
+      category: document.getElementById('pf-category').value,
+      image: document.getElementById('pf-image').value,
+      shortDesc: document.getElementById('pf-shortdesc').value.trim(),
+      fullDesc: document.getElementById('pf-fulldesc').value.trim(),
+      price: Number(price),
+      oldPrice: document.getElementById('pf-oldprice').value ? Number(document.getElementById('pf-oldprice').value) : null,
+      paymentLink: document.getElementById('pf-payment-link').value.trim(),
+      lsVariantId: document.getElementById('pf-ls-variant').value.trim(),
+      status: document.getElementById('pf-status').value
+    };
+
+    try{
+      const res = await fetch(`${WORKER_API}/products`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(productData)
+      });
+      const data = await res.json();
+      if(!res.ok){
+        alert('حصل خطأ في الحفظ: ' + (data.error ? JSON.stringify(data.error) : 'غير معروف'));
+        return;
+      }
+      const productId = data.id;
+
+      if(selectedProductFile){
+        saveBtn.textContent = 'بيرفع الملف...';
+        const base64 = await fileToBase64(selectedProductFile);
+        const uploadRes = await fetch(`${WORKER_API}/products/upload-file`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            productId,
+            fileBase64: base64,
+            fileName: selectedProductFile.name,
+            contentType: selectedProductFile.type || 'application/octet-stream'
+          })
+        });
+        const uploadData = await uploadRes.json();
+        if(!uploadRes.ok){
+          alert('اتحفظ المنتج، بس حصل خطأ في رفع الملف: ' + (uploadData.error ? JSON.stringify(uploadData.error) : 'غير معروف'));
+        }
+      }
+
+      selectedProductFile = null;
+      closeProductForm();
+      await renderProductsList();
+      updateStats();
+    }catch(e){
+      alert('حصل خطأ في الاتصال بالسيرفر.');
+    }finally{
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'حفظ';
+    }
+  }
+
+  async function deleteProductItem(id){
+    if(!confirm('متأكدة إنك عايزة تمسحي المنتج ده؟')) return;
+    try{
+      await fetch(`${WORKER_API}/products/delete`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id})
+      });
+    }catch(e){
+      alert('حصل خطأ في الحذف.');
+      return;
+    }
+    await renderProductsList();
+    updateStats();
+  }
+
+  // ===== Media tab =====
+  let cachedDashMedia = [];
+  let selectedMediaThumbFile = null;
+  let selectedMediaVideoFile = null;
+
+  async function renderMediaList(){
+    const list = document.getElementById('media-list');
+    list.innerHTML = '<div class="dash-empty">بيتحمّل...</div>';
+    try{
+      const res = await fetch(`${WORKER_API}/media`);
+      const data = await res.json();
+      cachedDashMedia = data.media || [];
+    }catch(e){
+      list.innerHTML = '<div class="dash-empty">تعذّر تحميل المحتوى، جربي تاني.</div>';
+      return;
+    }
+    if(!cachedDashMedia.length){
+      list.innerHTML = '<div class="dash-empty"><div class="dash-empty-icon">🎬</div>مفيش محتوى لسه — دوس "إضافة عنصر جديد" عشان تبدئي.</div>';
+      return;
+    }
+    list.innerHTML = cachedDashMedia.map(m => `
+      <div class="dash-list-item">
+        <div class="dash-list-thumb">${m.thumbnail ? `<img src="${m.thumbnail}" alt="">` : '✨'}</div>
+        <div class="dash-list-info">
+          <div class="dash-list-title">${m.title}</div>
+          <div class="dash-list-meta">${mediaTypeLabels[m.type] || m.type}</div>
+        </div>
+        <span class="dash-status-tag dash-status-${m.status || 'published'}">${mediaStatusLabels[m.status] || 'منشور'}</span>
+        <div class="dash-actions">
+          <button class="dash-edit-btn" onclick="openMediaForm('${m.id}')">تعديل</button>
+          <button class="dash-delete-btn" onclick="deleteMediaItem('${m.id}')">حذف</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openMediaForm(id){
+    const form = document.getElementById('media-form');
+    form.classList.add('open');
+    const thumbPreview = document.getElementById('mf-thumb-preview');
+    const videoPreview = document.getElementById('mf-video-preview');
+    selectedMediaThumbFile = null;
+    selectedMediaVideoFile = null;
+    document.getElementById('mf-thumb-file').value = '';
+    document.getElementById('mf-video-file').value = '';
+    if(id){
+      const m = cachedDashMedia.find(item => String(item.id) === String(id));
+      if(!m) return;
+      document.getElementById('mf-id').value = m.id;
+      document.getElementById('mf-title').value = m.title || '';
+      document.getElementById('mf-type').value = m.type || 'image';
+      document.getElementById('mf-desc').value = m.description || '';
+      document.getElementById('mf-fulldesc').value = m.fullDescription || '';
+      thumbPreview.innerHTML = m.thumbnail ? `<img src="${m.thumbnail}" alt="">` : '✨';
+      document.getElementById('mf-thumb-status').textContent = m.thumbnail
+        ? '✓ فيه صورة بالفعل — اختاري صورة جديدة بس لو عايزة تستبدليها'
+        : 'صورة JPG أو PNG';
+      videoPreview.innerHTML = (m.type === 'video' && m.mediaUrl) ? `<video src="${m.mediaUrl}" muted></video>` : '🎬';
+      document.getElementById('mf-video-status').textContent = (m.type === 'video' && m.mediaUrl)
+        ? '✓ فيه فيديو بالفعل — اختاري فيديو جديد بس لو عايزة تستبدليه'
+        : 'فيديو MP4، حاولي تخلّيه صغير الحجم قد الإمكان';
+      document.getElementById('mf-link').value = m.externalLink || '';
+      document.getElementById('mf-status').value = m.status || 'published';
+    } else {
+      document.getElementById('mf-id').value = '';
+      document.getElementById('mf-title').value = '';
+      document.getElementById('mf-type').value = 'image';
+      document.getElementById('mf-desc').value = '';
+      document.getElementById('mf-fulldesc').value = '';
+      thumbPreview.innerHTML = '✨';
+      document.getElementById('mf-thumb-status').textContent = 'صورة JPG أو PNG';
+      videoPreview.innerHTML = '🎬';
+      document.getElementById('mf-video-status').textContent = 'فيديو MP4، حاولي تخلّيه صغير الحجم قد الإمكان';
+      document.getElementById('mf-link').value = '';
+      document.getElementById('mf-status').value = 'published';
+    }
+    onMediaTypeChange();
+    form.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function closeMediaForm(){
+    document.getElementById('media-form').classList.remove('open');
+  }
+
+  async function saveMediaForm(){
+    const title = document.getElementById('mf-title').value.trim();
+    if(!title){
+      alert('اكتبي العنوان على الأقل.');
+      return;
+    }
+    const saveBtn = document.querySelector('#media-form .btn-primary');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'بيحفظ...';
+
+    const mediaData = {
+      id: document.getElementById('mf-id').value || undefined,
+      title,
+      type: document.getElementById('mf-type').value,
+      description: document.getElementById('mf-desc').value.trim(),
+      fullDescription: document.getElementById('mf-fulldesc').value.trim(),
+      externalLink: document.getElementById('mf-link').value.trim(),
+      status: document.getElementById('mf-status').value
+    };
+
+    try{
+      const res = await fetch(`${WORKER_API}/media`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(mediaData)
+      });
+      const data = await res.json();
+      if(!res.ok){
+        alert('حصل خطأ في الحفظ: ' + (data.error ? JSON.stringify(data.error) : 'غير معروف'));
+        return;
+      }
+      const mediaId = data.id;
+
+      if(selectedMediaThumbFile){
+        saveBtn.textContent = 'بيرفع الصورة...';
+        const base64 = await fileToBase64(selectedMediaThumbFile);
+        await fetch(`${WORKER_API}/media/upload-file`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            mediaId, field: 'thumb',
+            fileBase64: base64,
+            fileName: selectedMediaThumbFile.name,
+            contentType: selectedMediaThumbFile.type || 'application/octet-stream'
+          })
+        });
+      }
+      if(selectedMediaVideoFile){
+        saveBtn.textContent = 'بيرفع الفيديو...';
+        const base64 = await fileToBase64(selectedMediaVideoFile);
+        await fetch(`${WORKER_API}/media/upload-file`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            mediaId, field: 'media',
+            fileBase64: base64,
+            fileName: selectedMediaVideoFile.name,
+            contentType: selectedMediaVideoFile.type || 'application/octet-stream'
+          })
+        });
+      }
+
+      selectedMediaThumbFile = null;
+      selectedMediaVideoFile = null;
+      closeMediaForm();
+      await renderMediaList();
+      updateStats();
+    }catch(e){
+      alert('حصل خطأ في الاتصال بالسيرفر.');
+    }finally{
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'حفظ';
+    }
+  }
+
+  async function deleteMediaItem(id){
+    if(!confirm('متأكدة إنك عايزة تمسحي العنصر ده؟')) return;
+    try{
+      await fetch(`${WORKER_API}/media/delete`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id})
+      });
+    }catch(e){
+      alert('حصل خطأ في الحذف.');
+      return;
+    }
+    await renderMediaList();
+    updateStats();
+  }
+
+  // ===== Chats tab =====
+  let activeChatEmail = null;
+
+  function renderChatThreadList(){
+    const listEl = document.getElementById('chat-thread-list');
+    const chats = getChats();
+    const emails = Object.keys(chats).filter(email => chats[email] && chats[email].length);
+    if(!emails.length){
+      listEl.innerHTML = '<div class="dash-empty" style="padding:20px 10px"><div class="dash-empty-icon">💬</div>لسه مفيش رسايل من العملاء.</div>';
+      return;
+    }
+    emails.sort((a, b) => {
+      const lastA = chats[a][chats[a].length - 1].time || 0;
+      const lastB = chats[b][chats[b].length - 1].time || 0;
+      return lastB - lastA;
+    });
+    listEl.innerHTML = emails.map(email => {
+      const thread = chats[email];
+      const last = thread[thread.length - 1];
+      const isActive = email === activeChatEmail;
+      return `
+        <div onclick="openChatThreadInDash('${email}')" style="cursor:pointer;padding:12px;border-radius:12px;margin-bottom:6px;background:${isActive ? 'var(--bg)' : 'transparent'}">
+          <div style="font-weight:800;color:var(--navy);font-size:13px;margin-bottom:3px">${email}</div>
+          <div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${last.text}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openChatThreadInDash(email){
+    activeChatEmail = email;
+    document.getElementById('chat-dash-empty').style.display = 'none';
+    document.getElementById('chat-dash-thread').style.display = 'block';
+    document.getElementById('chat-dash-name').textContent = email;
+    renderChatDashMessages();
+    renderChatThreadList();
+  }
+
+  function renderChatDashMessages(){
+    const box = document.getElementById('chat-dash-messages');
+    const thread = getChatThread(activeChatEmail);
+    box.innerHTML = thread.map(m => `
+      <div class="chat-msg ${m.sender === 'customer' ? 'from-customer' : 'from-staff'}" style="align-self:${m.sender === 'customer' ? 'flex-start' : 'flex-end'}">${m.text}</div>
+    `).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function sendStaffChatMessage(){
+    if(!activeChatEmail) return;
+    const input = document.getElementById('chat-dash-input');
+    const text = input.value.trim();
+    if(!text) return;
+    pushChatMessage(activeChatEmail, 'staff', text);
+    input.value = '';
+    renderChatDashMessages();
+    renderChatThreadList();
+  }
+
+  // ===== Orders tab =====
+  let cachedDashOrders = [];
+
+  async function renderOrdersList(){
+    const listEl = document.getElementById('orders-list');
+    listEl.innerHTML = '<div class="dash-empty">بيتحمّل...</div>';
+    try{
+      const res = await fetch(`${WORKER_API}/orders`);
+      const data = await res.json();
+      cachedDashOrders = data.orders || [];
+    }catch(e){
+      listEl.innerHTML = '<div class="dash-empty">تعذّر تحميل الطلبات، جربي تاني.</div>';
+      return;
+    }
+    if(!cachedDashOrders.length){
+      listEl.innerHTML = '<div class="dash-empty"><div class="dash-empty-icon">📦</div>لسه مفيش عمليات شراء متسجلة.</div>';
+      return;
+    }
+    const statusLabels = {pending: 'قيد المراجعة', completed: 'تم الدفع', rejected: 'مرفوض'};
+    const statusClass = {pending: 'draft', completed: 'available', rejected: 'archived'};
+    listEl.innerHTML = cachedDashOrders.map(o => {
+      const dateStr = o.date ? new Date(o.date).toLocaleString('ar-EG') : '';
+      const qtyText = o.quantity > 1 ? ` × ${o.quantity}` : '';
+      const st = o.approvalStatus || 'pending';
+      return `
+        <div class="dash-list-item">
+          <div class="dash-list-thumb">🧾</div>
+          <div class="dash-list-info">
+            <div class="dash-list-title">${o.productName}${qtyText}</div>
+            <div class="dash-list-meta">العميل: ${o.customerEmail} · $${o.price}</div>
+            <div class="dash-list-meta">${dateStr}</div>
+          </div>
+          <span class="dash-status-tag dash-status-${statusClass[st] || 'draft'}">${statusLabels[st] || st}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ===== FAQ tab =====
+  function renderFaqDashList(){
+    const listEl = document.getElementById('faq-dash-list');
+    const faqs = getFaqs();
+    if(!faqs.length){
+      listEl.innerHTML = '<div class="dash-empty"><div class="dash-empty-icon">❓</div>لسه محدش سأل أي سؤال.</div>';
+      return;
+    }
+    const sorted = faqs.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    listEl.innerHTML = sorted.map(f => `
+      <div class="dash-form open" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px">
+          <div>
+            <div style="font-weight:800;color:var(--navy);font-size:14.5px;margin-bottom:4px">${f.question}</div>
+            ${f.askedBy ? `<div style="font-size:11.5px;color:var(--text-muted)">من: ${f.askedBy}</div>` : ''}
+          </div>
+          <span class="dash-status-tag ${f.status === 'answered' ? 'dash-status-available' : 'dash-status-draft'}">${f.status === 'answered' ? 'اتجاوب' : 'محتاج رد'}</span>
+        </div>
+        <textarea id="faq-answer-${f.id}" placeholder="اكتب الإجابة هنا..." style="width:100%;min-height:70px;padding:11px 14px;border-radius:10px;border:1.5px solid var(--border);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;margin-bottom:10px">${f.answer || ''}</textarea>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="answerFaqQuestion('${f.id}')">نشر الإجابة</button>
+          <button class="dash-delete-btn" onclick="deleteFaqQuestion('${f.id}')">حذف السؤال</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function answerFaqQuestion(id){
+    const textarea = document.getElementById('faq-answer-' + id);
+    const answer = textarea.value.trim();
+    if(!answer){
+      alert('اكتب إجابة الأول.');
+      return;
+    }
+    const faqs = getFaqs();
+    const item = faqs.find(f => String(f.id) === String(id));
+    if(!item) return;
+    item.answer = answer;
+    item.status = 'answered';
+    saveFaqs(faqs);
+    renderFaqDashList();
+  }
+
+  function deleteFaqQuestion(id){
+    if(!confirm('متأكد إنك عايز تمسحي السؤال ده؟')) return;
+    const faqs = getFaqs().filter(f => String(f.id) !== String(id));
+    saveFaqs(faqs);
+    renderFaqDashList();
+  }
+
+  // ===== Contact tab =====
+  function loadContactForm(){
+    const info = getContactInfo();
+    document.getElementById('cf-email').value = info.email || '';
+    document.getElementById('cf-whatsapp').value = info.whatsappNumber || '';
+  }
+
+  function saveContactForm(){
+    const email = document.getElementById('cf-email').value.trim();
+    const whatsapp = document.getElementById('cf-whatsapp').value.trim();
+    localStorage.setItem('inrace_contact_info', JSON.stringify({email, whatsappNumber: whatsapp}));
+    const status = document.getElementById('cf-status');
+    status.style.display = 'block';
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+  }
+
+  function exportAllData(){
+    const data = {
+      exportedAt: new Date().toISOString(),
+      products: cachedDashProducts,
+      media: cachedDashMedia,
+      faqs: getFaqs(),
+      chats: getChats(),
+      orders: cachedDashOrders,
+      contactInfo: getContactInfo(),
+      customCategories: (function(){ try{ return JSON.parse(localStorage.getItem('inrace_custom_categories')) || []; }catch(e){ return []; } })()
+    };
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inrace-backup-' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ===== Init =====
+  populateCategorySelect();
+  (async function initDashboard(){
+    await renderProductsList();
+    await renderOrdersList();
+    await renderMediaList();
+    renderChatThreadList();
+    renderFaqDashList();
+    loadContactForm();
+    updateStats();
+  })();
+
+  document.getElementById('chat-dash-input').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') sendStaffChatMessage();
+  });
+</script>
+</body>
+</html>
