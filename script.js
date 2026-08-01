@@ -79,7 +79,32 @@ function addToCart(btn){
   openCart();
 }
 
-function buyProductNow(p){
+async function buyProductNow(p){
+  const session = getSession();
+  const customerEmail = session ? session.email : '';
+
+  try{
+    const res = await fetch(`${WORKER_API}/checkout/initiate`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        productId: p.id || '',
+        productName: p.name,
+        price: p.price,
+        quantity: 1,
+        customerEmail
+      })
+    });
+    const data = await res.json();
+    if(data.automated && data.checkoutUrl){
+      window.location.href = data.checkoutUrl;
+      return;
+    }
+  }catch(e){
+    console.error('تعذّر بدء الدفع الأوتوماتيكي، هنكمل بالطريقة العادية', e);
+  }
+
+  // فولباك: المنتج ده لسه معملوش ربط أوتوماتيكي، فنكمل بالطريقة العادية (سلة + صفحة دفع فيها رفع صورة تأكيد)
   const existing = cart.find(item => item.name === p.name && item.paymentLink === (p.paymentLink || ''));
   if(existing){
     existing.quantity = (existing.quantity || 1) + 1;
